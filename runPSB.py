@@ -145,7 +145,7 @@ else:
     r = stE(context='CPU')
 output=[]
 intensity = []
-fname = f"Q({p['qx_ini']:.2f}-{p['qy_ini']:.2f})I{p['bunch_intensity']/1e10:.1e}P{p['n_part']:.1e}T{p['num_turns']:.1e}{'SC'*p['install_space_charge']}{'_pic' * p['install_space_charge'] * (p['space_charge_mode'] == 'pic')}"
+fname = f"Q({p['qx_ini']:.2f}-{p['qy_ini']:.2f})I{p['bunch_intensity']/1e10:.1e}P{p['n_part']:.1e}T{p['num_turns']:.1e}{'FE'*p['include_field_errors']}{'SC'*p['install_space_charge']}{'_pic' * p['install_space_charge'] * (p['space_charge_mode'] == 'pic')}"
 
 
 #%%
