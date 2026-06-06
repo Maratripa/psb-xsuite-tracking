@@ -2,7 +2,7 @@ import xtrack as xt
 import pandas as pd
 import xdeps as xd
 import numpy as np
-from simulation_parameters import parameters as p
+from simulation_parameters import parameters as p, idx
 
 print('*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~**~*~*~**~*~*~**~*~*~*')
 print('003_prepare_acceleration.py')

@@ -2,24 +2,22 @@
 import xtrack as xt
 import xobjects as xo
 import xfields as xf
-#import lib.xfields.xfields as xf
 import xpart as xp
 import numpy as np
 import json
 import time
 import os
 from lib.statisticalEmittance import StatisticalEmittance as stE
-from lib.online_plotting import plot_phasespace
 
 
 #%%
 #########################################
 # Load parameters
 #########################################
-from simulation_parameters import parameters as p
+from simulation_parameters import parameters as p, idx
 source_dir = os.getcwd() + '/'
 if p['prepare_tune_ramp']:
-    with open(source_dir+'time_tables/tunes.json', 'r') as fid:
+    with open(source_dir+f'time_tables/tunes_{idx}.json', 'r') as fid:
         d = json.load(fid)
     for key in d:
         p[key] = d[key]
@@ -30,7 +28,7 @@ if p['prepare_tune_ramp']:
 # Load PSB line
 #########################################
 context = p['context']
-line = xt.Line.from_json(source_dir+'psb/psb_line_thin.json')
+line = xt.Line.from_json(source_dir+f'psb/psb_line_thin_{idx}.json')
 Cpsb = line.get_length() # 157.08 m
 print('Loaded PSB line from psb/psb_line_thin.json.')
 
@@ -52,7 +50,7 @@ if p['install_space_charge']:
                     nemitt_x=p['nemitt_x'], nemitt_y=p['nemitt_y'],
                     sigma_z=p['sigma_z'],
                     num_spacecharge_interactions=p['num_spacecharge_interactions'],
-                    #delta_rms=1e-3
+                    delta_rms=1e-3
                     )
     if mode == 'frozen':
         pass # Already configured in line
@@ -95,7 +93,7 @@ print('Tracker built')
 # Setup particles for injection
 #########################################
 print('%s particle distribution.'%p['particle_distribution'])
-with open(source_dir+'input/particles_initial.json', 'r') as fid:
+with open(source_dir+f'input/particles_initial_{idx}.json', 'r') as fid:
     particles_for_injection = xp.Particles.from_dict(json.load(fid), _context=context)
 print('Loaded particles from input/particles_initial.json.')
 if p['num_injections']==1:
@@ -130,76 +128,24 @@ elif p['num_injections']>1:
     print('Generating particle object with unallocated space.')
     particles = line.build_particles(_capacity=p['n_part']+1, x=0)
     particles.state[0] = -500 # kill the particle added by default
-    
 
-#%%
-#########################################
-# Include injection foil
-# I need a to_dict() method for Foil in 
-# order to save the line to json
-# to be implemented...
-#########################################
-if p['install_injection_foil']==True:    
-    from lib.foil import Foil
-    #from lib.foil2 import Foil
-
-    print('Creating PSB foil...')
-    thickness = 200 #ug/cm^2
-    xmin = -0.099
-    #xmax = -0.067 # actual location of the foil
-    xmax = +0.099 # for testing
-    ymin = -0.029
-    ymax = 0.029
-    psbfoil = Foil(xmin, xmax, ymin, ymax, thickness)
-    print('PSB foil created.')
-    print('Setting scatter choice to %s (1: simple (no losses) 0: full (with losses))'%(p['scatterchoice']))
-    psbfoil.setScatterChoice(p['scatterchoice'])
-    psbfoil.setActivateFoil(1) # activates foil
-
-    print('Inserting foil element to line.')
-    line.discard_tracker()
-    line.insert_element(index='bi1.tstr1l1', element=psbfoil, name='psbfoil')
-    line.build_tracker()
-
-
-#%%
-#########################################
-# Last configs
-#########################################
-if p['prepare_acceleration'] == 0:
-    # Switching all RF cavities OFF
-    print('Switching off all cavities.')
-    line_table = line.get_table()
-    element_mask = np.where(line_table['element_type']=='Cavity')[0]
-    for i in element_mask:
-        cav_name = line_table['name'][i]
-        line.element_refs[cav_name].voltage = 0
-        line.element_refs[cav_name].frequency = 0
-    print('All cavities switched off.')
-    line.twiss_default['method'] = '4d'
-    print('Twiss method set to 4d.')
-    
-    # make sure space charge kicks work properly with coasting beam
-    # synctime available only for GPU for now...
-    if p['install_space_charge']:   
-        #import xtrack.synctime as st
-        #st.install_sync_time_at_collective_elements(line)
-        #zeta_max0 = -Cpsb/2#*te.beta0/beta1
-        #particles.zeta = particles.zeta/particles.rvv+(zeta_max0-Cpsb)/particles.rvv
-        #st.prepare_particles_for_sync_time(line, particles)
-        pass
 
 line.enable_time_dependent_vars = True
 #line.dt_update_time_dependent_vars = 3e-6 # approximately every 3 turns
 line.vars.cache_active = False
+line.energy_program.line.particle_ref = line.particle_ref
 line.vars['t_turn_s'] = 0.0
 output = []
 if p['GPU_FLAG']:
+    import cupy as cp
+    op = cp
     r = stE(context='GPU')
 else:
+    op = np
     r = stE(context='CPU')
 output=[]
 intensity = []
+fname = f"Q({p['qx_ini']:.2f}-{p['qy_ini']:.2f})I{p['bunch_intensity']/1e10:.1e}P{p['n_part']:.1e}T{p['num_turns']:.1e}{'SC'*p['install_space_charge']}{'_pic' * p['install_space_charge'] * (p['space_charge_mode'] == 'pic')}"
 
 
 #%%
@@ -217,11 +163,7 @@ for ii in range(num_turns):
         if ii == p['num_injections']:
             p_injection.num_particles_to_inject = 0
             print('Injection finished.')
-            if p['install_injection_foil']==True:
-                # to be reviewed
-                psbfoil.setActivateFoil(0) # deactivates foil
-                print('Foil deactivated.')
-        elif ii<p['num_injections']:
+        elif ii < p['num_injections']:
             print('Injecting %i macroparticles.'%(int(p['n_part']/p['num_injections'])))
         intensity.append(particles.weight[particles.state>0].sum())
 
@@ -234,31 +176,38 @@ for ii in range(num_turns):
 
     # update output
     bunch_moments=r.measure_bunch_moments(particles)
-    if p['GPU_FLAG']:
-        output.append([len(r.coordinate_matrix[0]),bunch_moments['nemitt_x'].tolist(),bunch_moments['nemitt_y'].tolist(),bunch_moments['emitt_z'].tolist(), np.mean((particles.x).get()), np.mean((particles.y).get()), np.mean((particles.zeta).get()), np.mean((particles.delta).get())])
-    else:
-        output.append([len(r.coordinate_matrix[0]),bunch_moments['nemitt_x'].tolist(),bunch_moments['nemitt_y'].tolist(),bunch_moments['emitt_z'].tolist(), np.mean(particles.x), np.mean(particles.y), np.mean(particles.zeta), np.mean(particles.delta)])
+    
+    means = op.array([
+        op.mean(particles.x), op.mean(particles.y), op.mean(particles.zeta),
+        op.mean(particles.px), op.mean(particles.py), op.mean(particles.delta)
+    ])
 
-    # save every some turns
+    stds = op.array([
+        op.std(particles.x), op.std(particles.y), op.std(particles.zeta),
+        op.std(particles.px), op.std(particles.py), op.std(particles.delta)
+    ])
+
+    output.append([
+        len(r.coordinate_matrix[0]),
+        bunch_moments['nemitt_x'].tolist(),
+        bunch_moments['nemitt_y'].tolist(),
+        bunch_moments['emitt_z'].tolist(),
+        *context.nparray_from_context_array(means),
+        *context.nparray_from_context_array(stds),
+        float(context.nparray_from_context_array(particles.beta0)[0]),
+        float(context.nparray_from_context_array(particles.gamma0)[0]),
+        float(context.nparray_from_context_array(particles.p0c)[0])
+    ])
+
     if ii in p['turns2saveparticles']:
         print(f'Saving turn {ii}')
-        with open(source_dir+f'output/particles_turn_{ii:05d}.json', 'w') as fid:
+        particles_fname = f"{fname}_particles_turn_{ii:05d}.json"
+        with open(particles_fname, 'w') as fid:
             json.dump(particles.to_dict(), fid, cls=xo.JEncoder)
-            print(f'Particles saved to output/particles_turn_{ii:05d}.json.')
-        #np.save(source_dir+'output/distribution_'+str(int(ii)), r.coordinate_matrix)
-        #print(f'Distribution saved to output/distribution_{ii}.npy.')
-        ouput=np.array(output)
-        np.save(source_dir+'output/emittances', output)
-        print(f'Emittances saved to output/emittances.npy.')
-    
-    # plot every some turns
-    if ii in p['turns2plot']:
-        plot_phasespace(particles, ii, png_dir=source_dir+'output/', bins=600, vmin=2, GPU_FLAG=p['GPU_FLAG'])
-        print(f'Phase space plot saved to output/turn_{ii:05d}.png.')
+            print(f'Particles saved to {particles_fname}.')
 
 end = time.time()
 print('Tracking finished.')
 print('Total seconds = ', end - start)
-np.save(source_dir+'output/emittances', output)
-print(f'Emittances saved to output/emittances.npy.')
-# %%
+np.save(source_dir+f'{fname}', output)
+print(f'Emittances saved to {fname}.npy.')

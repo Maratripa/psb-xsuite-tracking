@@ -1,6 +1,6 @@
 import xtrack as xt
 from xtrack.slicing import Strategy, Teapot
-from simulation_parameters import parameters as p
+from simulation_parameters import parameters as p, idx
 
 print('*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~**~*~*~**~*~*~**~*~*~*')
 print('004_prepare_for_tracking.py')
@@ -78,5 +78,5 @@ print('Working point of thin lattice: (Qx, Qy) = (%s, %s)'%(tw.qx, tw.qy))
 #########################################
 # Save line to .json
 #########################################
-line.to_json('psb/psb_line_thin.json')
+line.to_json(f'psb/psb_line_thin_{idx}.json')
 print('Line saved to psb/psb_line_thin.json')

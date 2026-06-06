@@ -1,7 +1,7 @@
 import xtrack as xt
 import xpart as xp
 import xobjects as xo
-from simulation_parameters import parameters as p
+from simulation_parameters import parameters as p, idx
 from lib.parabolic_longitudinal_distribution import parabolic_longitudinal_distribution
 import numpy as np
 import json
@@ -15,7 +15,7 @@ print('*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~**~*~*~**~*~*~**~*~*~*')
 # Load PSB line in xsuite and cycle at foil
 #########################################
 print('Loading PSB line from psb/psb_line_thin.json.')
-line = xt.Line.from_json('psb/psb_line_thin.json')
+line = xt.Line.from_json(f'psb/psb_line_thin_{idx}.json')
 line.build_tracker()
 Cpsb = line.get_length() # 157.08 m
 
@@ -36,7 +36,7 @@ if p['particle_distribution'] == 'simulated':
         # initial guess of the closed orbit at the foil. This is because of the large bump at the foil (~81 mm).
         # Thus, the particle generators below will fail...
         line.build_tracker()
-        line.to_json('psb/psb_line_thin.json')
+        line.to_json(f'psb/psb_line_thin_{idx}.json')
         print('Line saved to psb/psb_line_thin.json')
 
     print('Generating particles...')
@@ -77,7 +77,7 @@ if p['particle_distribution'] == 'simulated':
     particles.x += p['injection_missteering_x']
     particles.y += p['injection_missteering_y']
     
-    with open('input/particles_initial.json', 'w') as fid:
+    with open(f'input/particles_initial_{idx}.json', 'w') as fid:
         json.dump(particles.to_dict(), fid, cls=xo.JEncoder)
     print('Number of macroparticles: ', p['n_part'])
     print('Particles generated and saved to inputs/particles_initial.json.')
@@ -88,8 +88,10 @@ elif p['particle_distribution'] == 'real':
     print('Twissing.')
     tw = line.twiss()
     #tw = line.twiss(co_search_at='psb1$start') # closed orbit at PSB start, otherwise need to give co_guess (xtrack 0.52.0)
-    co_x_at_foil = tw['x', 'bi1.tstr1l1_entry']
-    co_y_at_foil = tw['y', 'bi1.tstr1l1_entry']
+    # co_x_at_foil = tw['x', 'bi1.tstr1l1_entry']
+    # co_y_at_foil = tw['y', 'bi1.tstr1l1_entry']
+    co_x_at_foil = tw['x', 'bi1.tstr1l1']
+    co_y_at_foil = tw['y', 'bi1.tstr1l1']
     print('Closed orbit at foil: x = %s m, y = %s m.'%(co_x_at_foil, co_y_at_foil))
 
     # Multi-turn injection is performed at the foil; mismatched otherwise
@@ -97,7 +99,7 @@ elif p['particle_distribution'] == 'real':
     line.cycle(name_first_element = 'bi1.tstr1l1', inplace=True)
     line.build_tracker()
     print('Changed line starting point to bi1.tstr1l1 (foil).')
-    line.to_json('psb/psb_line_thin.json')
+    line.to_json(f'psb/psb_line_thin_{idx}.json')
     print('Line saved to psb/psb_line_thin.json')
     
     fname = 'L4_particle_distribution/atPSBfoil-450keV.txt'
@@ -148,6 +150,6 @@ elif p['particle_distribution'] == 'real':
     particles.py = df["y'"].values * 1e-3 * (1 + particles.delta)
     particles.weight = p['macrosize']
     print('Macrosize = ', p['macrosize'])
-    with open('input/particles_initial.json', 'w') as fid:
+    with open(f'input/particles_initial_{idx}.json', 'w') as fid:
         json.dump(particles.to_dict(), fid, cls=xo.JEncoder)
     print('Saved %s to particles_initial.json.'%fname)

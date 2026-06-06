@@ -1,7 +1,7 @@
 import xtrack as xt
 import pandas as pd
 import xdeps as xd
-from simulation_parameters import parameters as p
+from simulation_parameters import parameters as p, idx
 
 print('*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~**~*~*~**~*~*~**~*~*~*')
 print('002_include_injection_chicane.py')

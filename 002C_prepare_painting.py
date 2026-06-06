@@ -1,7 +1,7 @@
 import xtrack as xt
 import xdeps as xd
 import pandas as pd
-from simulation_parameters import parameters as p
+from simulation_parameters import parameters as p, idx
 
 print('*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~**~*~*~**~*~*~**~*~*~*')
 print('002C_prepare_painting.py')

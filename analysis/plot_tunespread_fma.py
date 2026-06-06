@@ -8,16 +8,20 @@ import json
 
 
 #%%
-x=np.load('../output/x.npy')
-y=np.load('../output/y.npy')
-p = {}
-with open('../tables/tunes.json', 'r') as fid:
-     d = json.load(fid)
-for key in d:
-     p[key] = d[key]
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from simulation_parameters import parameters as p, idx
+
+fname = f"Q({p['qx_ini']:.2f}-{p['qy_ini']:.2f})I{p['bunch_intensity']/1e10:.1e}P{p['n_part']:.1e}T{p['num_turns']:.1e}{'SC'*p['install_space_charge']}{'_pic' * p['install_space_charge'] * (p['space_charge_mode'] == 'pic')}"
+
+#%%
+x=np.load(f'../output/{fname}_x.npy')
+y=np.load(f'../output/{fname}_y.npy')
+
 try:
-    qx_pic = np.load('../output/qx_pic.npy')
-    qy_pic = np.load('../output/qy_pic.npy')
+    qx_pic = np.load(f'../output/{fname}_qx_pic.npy')
+    qy_pic = np.load(f'../output/{fname}_qy_pic.npy')
 except:
     qx_pic = np.nan
     qy_pic = np.nan
@@ -53,7 +57,9 @@ d = np.log(np.sqrt( (Qx-Qx1)**2 + (Qy-Qy1)**2 ))
 
 
 #%%
-r=resonance_lines([4.0,4.3],[4.4,4.7], [1,2,3,4], 16)
+qx_min, qx_max = p['qx_ini'] - 0.1, p['qx_ini'] + 0.1
+qy_min, qy_max = p['qy_ini'] - 0.2, p['qy_ini'] + 0.1
+r=resonance_lines([qx_min, qx_max], [qy_min, qy_max], [1,2,3,4], 16)
 #r=resonance_lines([4.06,4.3],[4.06,4.3], [1,2,3,4], 16)
 fontsize=17
 f, ax = plt.subplots(1,figsize=(6,6))

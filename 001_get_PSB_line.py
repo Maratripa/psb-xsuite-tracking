@@ -1,7 +1,7 @@
 from cpymad.madx import Madx
 import xtrack as xt
 import xpart as xp
-from simulation_parameters import parameters as p
+from simulation_parameters import parameters as p, idx
 
 print('*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~**~*~*~**~*~*~**~*~*~*')
 print('001_get_PSB_line.py')

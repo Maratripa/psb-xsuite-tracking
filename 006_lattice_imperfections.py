@@ -1,5 +1,5 @@
 import xtrack as xt
-from simulation_parameters import parameters as p
+from simulation_parameters import parameters as p, idx
 
 print('*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~**~*~*~**~*~*~**~*~*~*')
 print('006_lattice_imperfections.py')
@@ -8,7 +8,7 @@ print('*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~**~*~*~**~*~*~**~*~*~*')
 #########################################
 # Load PSB line in xsuite
 #########################################
-line = xt.Line.from_json('psb/psb_line_thin.json') # to get the lengths of the injection bumpers
+line = xt.Line.from_json(f'psb/psb_line_thin_{idx}.json') # to get the lengths of the injection bumpers
 
 #########################################
 # Correct vertical chromaticity
@@ -35,5 +35,5 @@ else:
 #########################################
 # Save line to .json
 #########################################
-line.to_json('psb/psb_line_thin.json')
+line.to_json(f'psb/psb_line_thin_{idx}.json')
 print('Line saved to psb/psb_line_thin.json')
