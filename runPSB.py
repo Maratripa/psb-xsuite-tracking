@@ -133,7 +133,8 @@ elif p['num_injections']>1:
 line.enable_time_dependent_vars = True
 #line.dt_update_time_dependent_vars = 3e-6 # approximately every 3 turns
 line.vars.cache_active = False
-line.energy_program.line.particle_ref = line.particle_ref
+if line.energy_program is not None:
+    line.energy_program.line.particle_ref = line.particle_ref
 line.vars['t_turn_s'] = 0.0
 output = []
 if p['GPU_FLAG']:
@@ -145,7 +146,7 @@ else:
     r = stE(context='CPU')
 output=[]
 intensity = []
-fname = f"Q({p['qx_ini']:.2f}-{p['qy_ini']:.2f})I{p['bunch_intensity']/1e10:.1e}P{p['n_part']:.1e}T{p['num_turns']:.1e}{'FE'*p['include_field_errors']}{'SC'*p['install_space_charge']}{'_pic' * p['install_space_charge'] * (p['space_charge_mode'] == 'pic')}"
+fname = f"Q({p['qx_ini']:.3f}-{p['qy_ini']:.3f})I{p['bunch_intensity']/1e10:.1e}P{p['n_part']:.1e}T{p['num_turns']:.1e}{'FE'*p['include_field_errors']}{'SC'*p['install_space_charge']}{'_pic' * p['install_space_charge'] * (p['space_charge_mode'] == 'pic')}"
 
 
 #%%
