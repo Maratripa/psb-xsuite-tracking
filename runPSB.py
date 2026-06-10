@@ -16,6 +16,8 @@ from lib.statisticalEmittance import StatisticalEmittance as stE
 #########################################
 from simulation_parameters import parameters as p, idx
 source_dir = os.getcwd() + '/'
+results_dir = os.path.join(source_dir, 'results')
+os.makedirs(results_dir, exist_ok=True)
 if p['prepare_tune_ramp']:
     with open(source_dir+f'time_tables/tunes_{idx}.json', 'r') as fid:
         d = json.load(fid)
@@ -202,7 +204,7 @@ for ii in range(num_turns):
 
     if ii in p['turns2saveparticles']:
         print(f'Saving turn {ii}')
-        particles_fname = f"{fname}_particles_turn_{ii:05d}.json"
+        particles_fname = os.path.join(results_dir, f"{fname}_particles_turn_{ii:05d}.json")
         with open(particles_fname, 'w') as fid:
             json.dump(particles.to_dict(), fid, cls=xo.JEncoder)
             print(f'Particles saved to {particles_fname}.')
@@ -210,5 +212,5 @@ for ii in range(num_turns):
 end = time.time()
 print('Tracking finished.')
 print('Total seconds = ', end - start)
-np.save(source_dir+f'{fname}', output)
-print(f'Emittances saved to {fname}.npy.')
+np.save(os.path.join(results_dir, fname), output)
+print(f'Emittances saved to {os.path.join(results_dir, fname)}.npy.')

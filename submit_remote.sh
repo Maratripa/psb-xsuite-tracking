@@ -29,6 +29,7 @@ cat << EOF > executable.sh
 #!/usr/bin/env bash
 tar xf files.tar.gz
 rm files.tar.gz
+mkdir -p results
 
 CONTAINER_FULLPATH="/cvmfs/unpacked.cern.ch/ghcr.io/ekatralis/xsuite-containers:v0.50.7-cuda12.9"
 
@@ -59,6 +60,8 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 output_destination = ${OUTPUT_PATH}
 transfer_input_files = files.tar.gz
+transfer_output_files = results
+MY.XRDCP_CREATE_DIR = True
 output = out.\$(ClusterId).\$(ProcId)
 error = err.\$(ClusterId).\$(ProcId)
 log = log.\$(ClusterId)
