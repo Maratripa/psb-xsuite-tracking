@@ -100,7 +100,7 @@ PARAMS['GPU_FLAG'] = True # if True, GPU is used
 def count_combinations():
     count = 1
     for param in PARAMS:
-        if isinstance(PARAMS[param], list) and param not in ['turns2saveparticles', 'turns2plot', 'KSW_time_sec', 'KSW_bump_amplitude_m']:
+        if isinstance(PARAMS[param], (list, np.ndarray)) and param not in ['turns2saveparticles', 'turns2plot', 'KSW_time_sec', 'KSW_bump_amplitude_m', 'tune_time_sec', 'qx_target', 'qy_target']:
             count = count * len(PARAMS[param])
     return count
 
@@ -114,7 +114,7 @@ def get_params(idx):
     cum_mul = [1]
     list_params = []
     for param in PARAMS:
-        if isinstance(PARAMS[param], list) and param not in ['turns2saveparticles', 'turns2plot', 'KSW_time_sec', 'KSW_bump_amplitude_m']:
+        if isinstance(PARAMS[param], (list, np.ndarray)) and param not in ['turns2saveparticles', 'turns2plot', 'KSW_time_sec', 'KSW_bump_amplitude_m', 'tune_time_sec', 'qx_target', 'qy_target']:
             list_params.append(param)
             OUT_PARAMS[param] = PARAMS[param][(idx // cum_mul[-1]) % len(PARAMS[param])]
             cum_mul.append(cum_mul[-1] * len(PARAMS[param]))
